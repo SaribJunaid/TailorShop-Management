@@ -16,5 +16,5 @@ This is a FastAPI backend for managing a tailor shop, supporting multiple shops,
 
 1. Clone the repo:
 ```bash
-git clone <repo_url>
+git clone <https://github.com/SaribJunaid/TailorShop-Management.git>
 cd backend
