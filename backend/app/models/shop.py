@@ -1,6 +1,6 @@
 # models/shop.py
 from sqlalchemy import Column, Integer, String
-from app.database import Base
+from Web_app.backend.app.models.database import Base
 
 class Shop(Base):
     __tablename__ = "shops"
