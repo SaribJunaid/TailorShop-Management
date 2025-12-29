@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite
+*.db
+.env
+*.egg-info/
+dist/
+build/
+
+# VSCode
+.vscode/
+
+# MacOS
+.DS_Store
+
+tailor.db
