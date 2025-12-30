@@ -9,8 +9,18 @@ from app.routers import (
     assignments,
     users
 )
+from app.models.database import engine, Base
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Tailor Shop Management API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 # Include routers
 app.include_router(auth.router)

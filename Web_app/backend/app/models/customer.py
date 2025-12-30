@@ -10,7 +10,7 @@ class Customer(Base):
 
     name = Column(String, nullable=False)
     phone = Column(String)
-    address = Column(String)
+    email = Column(String, nullable=True, index=True) 
 
     shop = relationship("Shop", back_populates="customers")
     measurements = relationship("Measurement", back_populates="customer")
