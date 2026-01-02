@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 class ShopBase(BaseModel):
@@ -7,15 +7,9 @@ class ShopBase(BaseModel):
     address: Optional[str] = None
 
 class ShopCreate(ShopBase):
-    pass
-
-class ShopUpdate(BaseModel):
-    name: Optional[str]
-    phone: Optional[str]
-    address: Optional[str]
+    pass  # Used during registration
 
 class ShopRead(ShopBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

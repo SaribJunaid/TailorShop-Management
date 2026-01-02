@@ -1,34 +1,26 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# -------------------------------
-# Database URL
-# -------------------------------
-# Using SQLite for local deployment
-SQLALCHEMY_DATABASE_URL = "sqlite:///./tailor.db"
+# Load environment variables from .env file
+load_dotenv()
 
-# If you want to switch to PostgreSQL or MySQL in future:
-# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/dbname"
-# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://user:password@localhost/dbname"
+# Retrieve the DATABASE_URL from environment variables
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
-# -------------------------------
-# Engine & Session Configuration
-# -------------------------------
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}  # only for SQLite
-)
+# Engine Configuration
+# For PostgreSQL (Neon), we don't need 'check_same_thread'
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
+# SessionLocal is the factory for database sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# -------------------------------
-# Base Class for Models
-# -------------------------------
+# Base class for all SQLAlchemy models
 Base = declarative_base()
 
-# -------------------------------
-# Dependency to use in FastAPI
-# -------------------------------
+# Dependency to get a DB session for each request
 def get_db():
     db = SessionLocal()
     try:

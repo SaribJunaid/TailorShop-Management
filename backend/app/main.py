@@ -1,37 +1,42 @@
 from fastapi import FastAPI
-from app.routers import (
-    auth,
-    customers,
-    measurements,
-    pieces,
-    shops,
-    stitchers,
-    assignments,
-    users
-)
-from app.models.database import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from dotenv import load_dotenv
+from app.routers import auth, customers, stitchers, measurements, orders,dashboard
+# Load environment variables
+load_dotenv()
 
-app = FastAPI(title="Tailor Shop Management API")
+app = FastAPI(
+    title="TailorShop SaaS API",
+    description="Professional multi-tenant management system for tailoring shops.",
+    version="1.0.0"
+)
+
+# --- CORS Configuration ---
+# This allows your frontend (e.g., React on port 5173) to make requests to this API
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:5173","http://192.168.100.8:8080","http://127.0.0.1:8080"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    allow_methods=["*"],  # Allows GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],  # Allows all headers (like Authorization)
 )
 
-# Include routers
+# --- Root Endpoint ---
+@app.get("/")
+async def root():
+    return {
+        "message": "TailorShop API is online",
+        "docs": "/docs",
+        "status": "healthy"
+    }
+
+# --- Router Registration ---
 app.include_router(auth.router)
 app.include_router(customers.router)
-app.include_router(measurements.router)
-app.include_router(pieces.router)
-app.include_router(shops.router)
 app.include_router(stitchers.router)
-app.include_router(assignments.router)
-app.include_router(users.router)
-
-@app.get("/")
-def read_root():
-    return {"message": "Tailor Shop Management API Running"}
+app.include_router(measurements.router)
+app.include_router(orders.router)
+app.include_router(dashboard.router)

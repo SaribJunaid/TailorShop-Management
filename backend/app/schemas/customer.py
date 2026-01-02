@@ -1,23 +1,21 @@
-from pydantic import BaseModel
-from typing import Optional, List
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict, EmailStr
+from typing import Optional
 
 class CustomerBase(BaseModel):
     name: str
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    shop_id: int
+    phone: str
+    email: Optional[EmailStr] = None
 
 class CustomerCreate(CustomerBase):
-    pass
+    pass  # shop_id is handled by the backend dependency, not the user
 
 class CustomerUpdate(BaseModel):
-    name: Optional[str]
-    phone: Optional[str]
-    email: Optional[str]
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 class CustomerRead(CustomerBase):
     id: int
+    shop_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

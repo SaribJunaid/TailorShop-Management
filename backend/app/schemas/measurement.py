@@ -1,10 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 
 class MeasurementBase(BaseModel):
-    customer_id: int
-    shop_id: int
+    label: Optional[str] = "Standard"
+    
+    # Physical dimensions
     chest: Optional[float] = None
     waist: Optional[float] = None
     hips: Optional[float] = None
@@ -15,31 +16,20 @@ class MeasurementBase(BaseModel):
     coat_length: Optional[float] = None
     pant_length: Optional[float] = None
     shalwar_length: Optional[float] = None
+    
     description: Optional[str] = None
-    advance_payment: Optional[float] = 0
-    remaining_amount: Optional[float] = 0
 
 class MeasurementCreate(MeasurementBase):
-    pass
+    customer_id: int  # Must specify which customer these belong to
 
-class MeasurementUpdate(BaseModel):
-    chest: Optional[float]
-    waist: Optional[float]
-    hips: Optional[float]
-    sleeve_length: Optional[float]
-    shoulder: Optional[float]
-    inseam: Optional[float]
-    neck: Optional[float]
-    coat_length: Optional[float]
-    pant_length: Optional[float]
-    shalwar_length: Optional[float]
-    description: Optional[str]
-    advance_payment: Optional[float]
-    remaining_amount: Optional[float]
+class MeasurementUpdate(MeasurementBase):
+    # All fields are inherited as optional, allowing partial updates
+    pass
 
 class MeasurementRead(MeasurementBase):
     id: int
+    customer_id: int
+    shop_id: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

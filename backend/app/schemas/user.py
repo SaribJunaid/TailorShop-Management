@@ -1,25 +1,25 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 
 class UserBase(BaseModel):
-    name: str
     username: str
-    role: Optional[str] = "STAFF"
-    shop_id: Optional[int] = None
-    is_active: Optional[bool] = True
+    name: str
+    phone: Optional[str] = None
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=8)
+    shop_name: str # Used only during initial signup to create the shop and owner together
 
 class UserRead(UserBase):
     id: int
+    shop_id: int
+    is_active: bool
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
-class UserUpdate(BaseModel):
-    name: Optional[str]
-    username: Optional[str]
-    role: Optional[str]
-    is_active: Optional[bool]
-    password: Optional[str]
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
