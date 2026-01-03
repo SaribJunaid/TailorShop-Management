@@ -119,6 +119,7 @@ def update_item_status(
     item.status = new_status
     db.commit()
     return {"message": "Status updated successfully", "new_status": new_status}
+
 @router.get("/", response_model=List[OrderRead])
 def list_orders(
     status: Optional[str] = None,
@@ -146,3 +147,13 @@ def get_public_order(public_id: str, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+@router.get("/items/", response_model=List[OrderItemRead])
+def list_all_shop_items(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all garment items across all orders for the current shop.
+    Useful for the Stitchers' workload dashboard.
+    """
+    return db.query(OrderItem).join(Order).filter(Order.shop_id == current_user.shop_id).all()
