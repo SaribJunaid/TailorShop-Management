@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import date, datetime
 from app.schemas.order_item import OrderItemCreate, OrderItemRead
+from app.schemas.stitcher import StitcherRead # Ensure this import exists
 
 class OrderBase(BaseModel):
     customer_id: int
@@ -12,8 +13,16 @@ class OrderBase(BaseModel):
     status: Optional[str] = "pending"
 
 class OrderCreate(OrderBase):
-    # This allows creating an order and its items in one API call
     items: List[OrderItemCreate]
+
+
+class OrderUpdate(BaseModel):
+    due_date: Optional[date] = None
+    total_amount: Optional[float] = None
+    advance_paid: Optional[float] = None
+    priority: Optional[str] = None
+    status: Optional[str] = None # This allows manual status changes
+    customer_id: Optional[int] = None
 
 class OrderRead(OrderBase):
     id: int
@@ -21,7 +30,8 @@ class OrderRead(OrderBase):
     shop_id: int
     balance_due: float
     created_at: datetime
-    # This automatically includes the list of items when returning the order
     items: List[OrderItemRead]
+    # To show customer name in Order Cards
+    customer_name: Optional[str] = None 
 
     model_config = ConfigDict(from_attributes=True)

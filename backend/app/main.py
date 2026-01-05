@@ -9,7 +9,8 @@ load_dotenv()
 app = FastAPI(
     title="TailorShop SaaS API",
     description="Professional multi-tenant management system for tailoring shops.",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False
 )
 
 # --- CORS Configuration ---

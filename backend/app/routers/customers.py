@@ -102,3 +102,22 @@ def update_customer(
     db.commit()
     db.refresh(customer)
     return customer
+
+@router.delete("/{customer_id}")
+def delete_customer(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a customer and their associated records."""
+    customer = db.query(Customer).filter(
+        Customer.id == customer_id, 
+        Customer.shop_id == current_user.shop_id
+    ).first()
+    
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    db.delete(customer)
+    db.commit()
+    return {"message": "Customer deleted successfully"}

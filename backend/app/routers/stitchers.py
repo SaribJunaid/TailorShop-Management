@@ -73,3 +73,10 @@ def delete_stitcher(
     db.delete(stitcher)
     db.commit()
     return None
+
+@router.get("/{stitcher_id}", response_model=StitcherRead)
+def get_stitcher(stitcher_id: int, db: Session = Depends(get_db)):
+    stitcher = db.query(Stitcher).filter(Stitcher.id == stitcher_id).first()
+    if not stitcher:
+        raise HTTPException(status_code=404, detail="Stitcher not found")
+    return stitcher
