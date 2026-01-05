@@ -268,11 +268,18 @@ def list_orders(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List shop orders with optional filtering."""
-    query = db.query(Order).filter(Order.shop_id == current_user.shop_id)
+    # Use .joinedload to prevent the 500 Internal Server Error
+    from sqlalchemy.orm import joinedload
+    
+    query = db.query(Order).options(
+        joinedload(Order.items), 
+        joinedload(Order.customer)
+    ).filter(Order.shop_id == current_user.shop_id)
     
     if status:
         query = query.filter(Order.status == status)
+    if customer_id:
+        query = query.filter(Order.customer_id == customer_id)
     if priority:
         query = query.filter(Order.priority == priority)
         
@@ -291,33 +298,34 @@ def list_order_items(
     return db.query(OrderItem).join(Order).filter(Order.shop_id == current_user.shop_id).all()
 
 
-@router.put("/items/{item_id}", response_model=OrderItemRead) # Ensure it returns OrderItemRead
+@router.put("/items/{item_id}", response_model=OrderItemRead)
 def update_order_item(
     item_id: int, 
     item_in: OrderItemUpdate, 
     db: Session = Depends(get_db)
 ):
-    # 1. Fetch the item with its relationship
+    # 1. Fetch the item
     item = db.query(OrderItem).filter(OrderItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    # 2. Update the item fields (status, stitcher_id, etc.)
+    # 2. Apply updates (status, stitcher_id, etc.)
     update_data = item_in.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(item, key, value)
     
     db.commit()
 
-    # 3. AUTO-SYNC: Update Main Order Status based on all items
+    # 3. AUTO-SYNC LOGIC: Recalculate Parent Order Status
+    # Fetch all garments belonging to this specific order
     all_items = db.query(OrderItem).filter(OrderItem.order_id == item.order_id).all()
-    
-    # Logic:
-    # - If ANY item is "in_progress", the main order is "in_progress"
-    # - If ALL items are "completed", main order is "ready" (for pickup)
-    # - If ALL items are "delivered", main order is "completed"
-    
     statuses = [i.status for i in all_items]
+    
+    # Priority Logic:
+    # 1. If ALL items are 'delivered' -> Main Order = 'completed'
+    # 2. If ALL items are 'completed' -> Main Order = 'ready' (for pickup)
+    # 3. If ANY item is 'in_progress', 'stitching', or 'cutting' -> Main Order = 'in_progress'
+    # 4. Default -> 'pending'
     
     if all(s == "delivered" for s in statuses):
         new_main_status = "completed"
@@ -328,14 +336,13 @@ def update_order_item(
     else:
         new_main_status = "pending"
 
-    # 4. Save the Main Order status
+    # 4. Update the Master Order
     db.query(Order).filter(Order.id == item.order_id).update({"status": new_main_status})
     db.commit()
     
-    # Refresh to ensure relationships (like stitcher name) are loaded
+    # Refresh to include the stitcher relationship for the frontend
     db.refresh(item) 
     return item
-
 
 @router.patch("/items/{item_id}/status")
 def update_item_status(

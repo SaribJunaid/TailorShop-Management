@@ -33,5 +33,9 @@ class OrderRead(OrderBase):
     items: List[OrderItemRead]
     # To show customer name in Order Cards
     customer_name: Optional[str] = None 
-
+    total_amount: float
+    advance_paid: float
+    status: str
+    due_date: date  # Ensure this is str or date
+    priority: str
     model_config = ConfigDict(from_attributes=True)
