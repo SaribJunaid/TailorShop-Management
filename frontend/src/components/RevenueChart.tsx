@@ -69,9 +69,65 @@
 //     </div>
 //   );
 // }
+// import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+// export function RevenueChart({ orders }: { orders: any[] }) {
+//   // Process real orders to get monthly totals
+//   const processData = () => {
+//     const monthlyMap: Record<string, number> = {};
+    
+//     orders.forEach(order => {
+//       const date = new Date(order.created_at || new Date());
+//       const month = date.toLocaleString('default', { month: 'short' });
+//       monthlyMap[month] = (monthlyMap[month] || 0) + (Number(order.total_amount) || 0);
+//     });
+
+//     return Object.keys(monthlyMap).map(month => ({
+//       month,
+//       revenue: monthlyMap[month]
+//     }));
+//   };
+
+//   const chartData = processData();
+
+//   return (
+//     <div className="bg-card rounded-2xl shadow-luxury p-6 border border-border/50">
+//       <div className="flex items-center justify-between mb-6">
+//         <h2 className="text-lg font-semibold text-card-foreground">Revenue Trend</h2>
+//         <span className="text-xs text-muted-foreground">Dynamic from Orders</span>
+//       </div>
+      
+//       <div className="h-64">
+//         <ResponsiveContainer width="100%" height="100%">
+//           <LineChart data={chartData}>
+//             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+//             <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+//             <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `Rs.${val}`} />
+//             <Tooltip 
+//               contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+//             />
+//             <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+//           </LineChart>
+//         </ResponsiveContainer>
+//       </div>
+//     </div>
+//   );
+// }
+
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export function RevenueChart({ orders }: { orders: any[] }) {
+// Define the structure to replace 'any'
+export interface ChartOrder {
+  id: number;
+  total_amount: number | string;
+  created_at?: string;
+}
+
+interface RevenueChartProps {
+  orders: ChartOrder[];
+}
+
+export function RevenueChart({ orders }: RevenueChartProps) {
   // Process real orders to get monthly totals
   const processData = () => {
     const monthlyMap: Record<string, number> = {};
@@ -101,12 +157,35 @@ export function RevenueChart({ orders }: { orders: any[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `Rs.${val}`} />
-            <Tooltip 
-              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+            <XAxis 
+              dataKey="month" 
+              stroke="#888888" 
+              fontSize={12} 
+              tickLine={false} 
+              axisLine={false} 
             />
-            <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+            <YAxis 
+              stroke="#888888" 
+              fontSize={12} 
+              tickLine={false} 
+              axisLine={false} 
+              tickFormatter={(val) => `Rs.${val}`} 
+            />
+            <Tooltip 
+              contentStyle={{ 
+                borderRadius: '12px', 
+                border: 'none', 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="revenue" 
+              stroke="hsl(var(--primary))" 
+              strokeWidth={3} 
+              dot={{ r: 4, fill: 'hsl(var(--primary))' }} 
+              activeDot={{ r: 6 }} 
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>

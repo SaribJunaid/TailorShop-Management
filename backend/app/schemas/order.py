@@ -24,28 +24,6 @@ class OrderUpdate(BaseModel):
     status: Optional[str] = None # This allows manual status changes
     customer_id: Optional[int] = None
 
-# class OrderRead(OrderBase):
-#     id: int
-#     public_id: str
-#     shop_id: int
-#     balance_due: float
-#     created_at: datetime
-#     items: List[OrderItemRead]
-#     # To show customer name in Order Cards
-#     customer_name: Optional[str] = None 
-#     total_amount: float
-#     advance_paid: float
-#     status: str
-#     due_date: date  # Ensure this is str or date
-#     priority: str
-#     model_config = ConfigDict(from_attributes=True)
-# Add this near the top of schemas/order.py
-class CustomerMin(BaseModel):
-    id: int
-    name: str
-    phone: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
-
 class OrderRead(OrderBase):
     id: int
     public_id: str
@@ -53,13 +31,11 @@ class OrderRead(OrderBase):
     balance_due: float
     created_at: datetime
     items: List[OrderItemRead]
-    
-    # CHANGE THIS: Match the relationship name in your Model
-    customer: Optional[CustomerMin] = None 
-    
+    # To show customer name in Order Cards
+    customer_name: Optional[str] = None
     total_amount: float
     advance_paid: float
     status: str
-    due_date: date  
+    due_date: date  # Ensure this is str or date
     priority: str
     model_config = ConfigDict(from_attributes=True)

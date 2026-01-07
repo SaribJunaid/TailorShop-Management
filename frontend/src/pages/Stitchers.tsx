@@ -225,7 +225,255 @@
 //     </Layout>
 //   );
 // }
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react';
+// import { Layout } from '@/components/Layout';
+// import apiClient from '@/api/client';
+// import { UserCog, ClipboardList, Plus, Loader2 } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import { cn } from '@/lib/utils';
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from '@/components/ui/dialog';
+// import { Input } from '@/components/ui/input';
+// import { Label } from '@/components/ui/label';
+// import { useToast } from '@/hooks/use-toast';
+// import { useNavigate } from 'react-router-dom';
+// import { Badge } from "@/components/ui/badge";
+
+// interface Stitcher {
+//   id: number;
+//   name: string;
+//   phone: string;
+//   specialty: string;
+//   shop_id: number;
+// }
+
+// interface OrderItem {
+//   id: number;
+//   garment_type: string;
+//   status: string;
+//   order_id: number;
+//   stitcher_id: number | null;
+// }
+
+// export default function Stitchers() {
+//   const { toast } = useToast();
+//   const navigate = useNavigate(); // Navigation initialized
+//   const [stitchers, setStitchers] = useState<Stitcher[]>([]);
+//   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+//   const [newStitcher, setNewStitcher] = useState({ name: '', phone: '', specialty: '' });
+
+//   const fetchData = async () => {
+//     setIsLoading(true);
+//     try {
+//       const [stitcherRes, orderItemsRes] = await Promise.all([
+//         apiClient.get('/stitchers/'),
+//         apiClient.get('/orders/items/') 
+//       ]);
+//       setStitchers(stitcherRes.data);
+//       setOrderItems(orderItemsRes.data || []);
+//     } catch (error) {
+//       toast({
+//         title: 'Error',
+//         description: 'Failed to fetch team data.',
+//         variant: 'destructive',
+//       });
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchData();
+//   }, []);
+
+//   const getStitcherWorkload = (stitcherId: number) => {
+//     return orderItems.filter((item) => 
+//       item.stitcher_id === stitcherId && 
+//       !['delivered', 'cancelled', 'completed', 'ready'].includes(item.status)
+//     );
+//   };
+
+//   const handleAddStitcher = async () => {
+//     if (!newStitcher.name.trim()) {
+//       toast({ title: 'Validation Error', description: 'Name is required.', variant: 'destructive' });
+//       return;
+//     }
+
+//     setIsSubmitting(true);
+//     try {
+//       await apiClient.post('/stitchers/', newStitcher);
+//       toast({
+//         title: 'Success',
+//         description: `${newStitcher.name} added to the team.`,
+//       });
+//       setNewStitcher({ name: '', phone: '', specialty: '' });
+//       setIsAddDialogOpen(false);
+//       fetchData(); 
+//     } catch (error: any) {
+//       toast({
+//         title: 'Failed to add',
+//         description: error.response?.data?.detail || 'Something went wrong',
+//         variant: 'destructive',
+//       });
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   if (isLoading) {
+//     return (
+//       <Layout title="Stitchers">
+//         <div className="flex items-center justify-center min-h-[400px]">
+//           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+//         </div>
+//       </Layout>
+//     );
+//   }
+
+//   return (
+//     <Layout title="Stitchers">
+//       <div className="flex items-center justify-between mb-6">
+//         <div>
+//           <h1 className="text-2xl font-bold tracking-tight">Tailoring Team</h1>
+//           <p className="text-muted-foreground">Manage workload and team performance</p>
+//         </div>
+//         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+//           <DialogTrigger asChild>
+//             <Button className="h-11 rounded-xl gap-2 shadow-luxury">
+//               <Plus className="h-4 w-4" />
+//               Add Stitcher
+//             </Button>
+//           </DialogTrigger>
+//           <DialogContent className="rounded-2xl sm:max-w-[425px]">
+//             <DialogHeader>
+//               <DialogTitle>Register New Stitcher</DialogTitle>
+//             </DialogHeader>
+//             <div className="space-y-4 pt-4">
+//               <div className="space-y-2">
+//                 <Label>Full Name *</Label>
+//                 <Input
+//                   placeholder="e.g. Muhammad Ahmed"
+//                   value={newStitcher.name}
+//                   onChange={(e) => setNewStitcher((prev) => ({ ...prev, name: e.target.value }))}
+//                   className="h-11 rounded-xl"
+//                 />
+//               </div>
+//               <div className="space-y-2">
+//                 <Label>Phone Number</Label>
+//                 <Input
+//                   placeholder="+92 300 1234567"
+//                   value={newStitcher.phone}
+//                   onChange={(e) => setNewStitcher((prev) => ({ ...prev, phone: e.target.value }))}
+//                   className="h-11 rounded-xl"
+//                 />
+//               </div>
+//               <div className="space-y-2">
+//                 <Label>Specialty</Label>
+//                 <Input
+//                   placeholder="e.g., Suits, Sherwani"
+//                   value={newStitcher.specialty}
+//                   onChange={(e) => setNewStitcher((prev) => ({ ...prev, specialty: e.target.value }))}
+//                   className="h-11 rounded-xl"
+//                 />
+//               </div>
+//               <Button 
+//                 onClick={handleAddStitcher} 
+//                 className="w-full h-11 rounded-xl mt-2"
+//                 disabled={isSubmitting}
+//               >
+//                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Register Stitcher'}
+//               </Button>
+//             </div>
+//           </DialogContent>
+//         </Dialog>
+//       </div>
+
+//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+//         {stitchers.map((stitcher) => {
+//           const currentWork = getStitcherWorkload(stitcher.id);
+//           const workloadPercentage = Math.min((currentWork.length / 5) * 100, 100);
+          
+//           return (
+//             <div
+//               key={stitcher.id}
+//               onClick={() => navigate(`/stitchers/${stitcher.id}`)}
+//               className="group bg-card rounded-2xl shadow-luxury p-6 border border-border/50 hover:shadow-luxury-hover transition-all cursor-pointer relative overflow-hidden"
+//             >
+//               <div className="flex items-start justify-between mb-4">
+//                 <div className="flex items-center gap-3">
+//                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+//                     <UserCog className="h-6 w-6" />
+//                   </div>
+//                   <div>
+//                     <h3 className="font-semibold text-card-foreground">{stitcher.name}</h3>
+//                     <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+//                       {stitcher.specialty || 'General Tailor'}
+//                     </p>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               <div className="space-y-3">
+//                 <div className="flex items-center justify-between text-sm">
+//                   <span className="text-muted-foreground">Active Workload</span>
+//                   <span className="font-bold">{currentWork.length} Items</span>
+//                 </div>
+//                 <div className="h-2 bg-muted rounded-full overflow-hidden">
+//                   <div
+//                     className={cn(
+//                       'h-full rounded-full transition-all duration-500',
+//                       workloadPercentage > 80 ? 'bg-red-500' : workloadPercentage > 50 ? 'bg-orange-500' : 'bg-green-500'
+//                     )}
+//                     style={{ width: `${workloadPercentage}%` }}
+//                   />
+//                 </div>
+//               </div>
+
+//               <div className="mt-6 space-y-2">
+//                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">In Progress</p>
+//                 {currentWork.length > 0 ? (
+//                   currentWork.slice(0, 2).map((item) => (
+//                     <div key={item.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
+//                       <div className="flex items-center gap-2 truncate">
+//                         <ClipboardList className="h-3 w-3 text-muted-foreground" />
+//                         <span className="truncate">{item.garment_type}</span>
+//                       </div>
+//                       <Badge variant="outline" className="text-[9px] h-4 px-1 capitalize">{item.status}</Badge>
+//                     </div>
+//                   ))
+//                 ) : (
+//                   <p className="text-xs py-2 text-muted-foreground italic">Available for assignment</p>
+//                 )}
+//               </div>
+              
+//               <div className="mt-4 pt-4 border-t border-border flex justify-between items-center text-[11px] text-muted-foreground">
+//                 <span>{stitcher.phone || 'No contact'}</span>
+//                 <span className="text-primary font-medium group-hover:underline">View Details →</span>
+//               </div>
+//             </div>
+//           );
+//         })}
+//       </div>
+
+//       {stitchers.length === 0 && !isLoading && (
+//         <div className="flex flex-col items-center justify-center py-20 bg-card rounded-2xl border-2 border-dashed">
+//           <UserCog className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
+//           <p className="text-muted-foreground font-medium">No team members yet</p>
+//           <Button variant="link" onClick={() => setIsAddDialogOpen(true)}>Add your first stitcher</Button>
+//         </div>
+//       )}
+//     </Layout>
+//   );
+// }
+import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '@/components/Layout';
 import apiClient from '@/api/client';
 import { UserCog, ClipboardList, Plus, Loader2 } from 'lucide-react';
@@ -243,7 +491,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
+import { AxiosError } from 'axios';
 
+// Interfaces to resolve "Unexpected any"
 interface Stitcher {
   id: number;
   name: string;
@@ -260,9 +510,13 @@ interface OrderItem {
   stitcher_id: number | null;
 }
 
+interface ApiError {
+  detail?: string;
+}
+
 export default function Stitchers() {
   const { toast } = useToast();
-  const navigate = useNavigate(); // Navigation initialized
+  const navigate = useNavigate();
   const [stitchers, setStitchers] = useState<Stitcher[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -270,12 +524,13 @@ export default function Stitchers() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newStitcher, setNewStitcher] = useState({ name: '', phone: '', specialty: '' });
 
-  const fetchData = async () => {
+  // fetchData wrapped in useCallback to fix "missing dependency" warning
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [stitcherRes, orderItemsRes] = await Promise.all([
-        apiClient.get('/stitchers/'),
-        apiClient.get('/orders/items/') 
+        apiClient.get<Stitcher[]>('/stitchers/'),
+        apiClient.get<OrderItem[]>('/orders/items/')
       ]);
       setStitchers(stitcherRes.data);
       setOrderItems(orderItemsRes.data || []);
@@ -288,15 +543,15 @@ export default function Stitchers() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]); // Dependency on toast is safe
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]); // Dependency array now correctly includes fetchData
 
   const getStitcherWorkload = (stitcherId: number) => {
-    return orderItems.filter((item) => 
-      item.stitcher_id === stitcherId && 
+    return orderItems.filter((item) =>
+      item.stitcher_id === stitcherId &&
       !['delivered', 'cancelled', 'completed', 'ready'].includes(item.status)
     );
   };
@@ -316,11 +571,13 @@ export default function Stitchers() {
       });
       setNewStitcher({ name: '', phone: '', specialty: '' });
       setIsAddDialogOpen(false);
-      fetchData(); 
-    } catch (error: any) {
+      fetchData();
+    } catch (error) {
+      // Correctly type the error to AxiosError to fix "Unexpected any"
+      const axiosError = error as AxiosError<ApiError>;
       toast({
         title: 'Failed to add',
-        description: error.response?.data?.detail || 'Something went wrong',
+        description: axiosError.response?.data?.detail || 'Something went wrong',
         variant: 'destructive',
       });
     } finally {
@@ -384,8 +641,8 @@ export default function Stitchers() {
                   className="h-11 rounded-xl"
                 />
               </div>
-              <Button 
-                onClick={handleAddStitcher} 
+              <Button
+                onClick={handleAddStitcher}
                 className="w-full h-11 rounded-xl mt-2"
                 disabled={isSubmitting}
               >
@@ -400,7 +657,7 @@ export default function Stitchers() {
         {stitchers.map((stitcher) => {
           const currentWork = getStitcherWorkload(stitcher.id);
           const workloadPercentage = Math.min((currentWork.length / 5) * 100, 100);
-          
+
           return (
             <div
               key={stitcher.id}
@@ -453,7 +710,7 @@ export default function Stitchers() {
                   <p className="text-xs py-2 text-muted-foreground italic">Available for assignment</p>
                 )}
               </div>
-              
+
               <div className="mt-4 pt-4 border-t border-border flex justify-between items-center text-[11px] text-muted-foreground">
                 <span>{stitcher.phone || 'No contact'}</span>
                 <span className="text-primary font-medium group-hover:underline">View Details →</span>

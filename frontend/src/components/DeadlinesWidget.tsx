@@ -105,33 +105,24 @@
 // import { useNavigate } from 'react-router-dom';
 // import { Clock, AlertTriangle, Calendar } from 'lucide-react';
 // import { cn } from '@/lib/utils';
-// export interface Customer {
-//   id: number;
+// export interface Customer{id: number;
 //   name: string;
 //   phone?: string;
-//   email?: string | null;
-// }
-
-// export interface OrderItem {
-//   id: number;
-//   garment_name: string;
-//   quantity: number;
-//   unit_price: number;
-// }
+//   email?: string | null;}
 
 // export interface Order {
 //   id: number;
 //   customer_id: number;
+//   customer?: Customer; // This is the missing link!
 //   total_amount: number;
 //   balance_due: number;
 //   status: string;
 //   due_date: string;
-//   customer?: Customer; // This is what allows 'Sarib' to show up
-//   items?: OrderItem[]; // Replaces 'any[]'
+//   items?: any[]; 
 // }
 
 // interface DeadlinesWidgetProps {
-//   orders: any[];
+//   orders: Order[];
 // }
 
 // export function DeadlinesWidget({ orders }: DeadlinesWidgetProps) {
@@ -217,6 +208,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Clock, AlertTriangle, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// CLEAN TYPES TO REMOVE "ANY" ERRORS
 export interface Customer {
   id: number;
   name: string;
@@ -227,31 +220,31 @@ export interface Customer {
 export interface OrderItem {
   id: number;
   garment_name: string;
-  quantity: number;
-  unit_price: number;
+  notes?: string;
 }
 
 export interface Order {
   id: number;
   customer_id: number;
+  customer?: Customer;
   total_amount: number;
   balance_due: number;
   status: string;
   due_date: string;
-  customer?: Customer; // This is what allows 'Sarib' to show up
-  items?: OrderItem[]; // Replaces 'any[]'
+  items?: OrderItem[]; // Replaced any[] with OrderItem[]
 }
 
 interface DeadlinesWidgetProps {
-  orders: any[];
+  orders: Order[];
 }
 
 export function DeadlinesWidget({ orders }: DeadlinesWidgetProps) {
   const navigate = useNavigate();
 
   // Filter for incomplete orders and sort by closest due date
+  // Added optional chaining and default string to prevent status errors
   const urgentOrders = orders
-    .filter(o => !['completed', 'delivered'].includes(o.status?.toLowerCase()))
+    .filter(o => !['completed', 'delivered'].includes((o.status || '').toLowerCase()))
     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .slice(0, 4);
 

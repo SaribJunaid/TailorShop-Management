@@ -170,9 +170,6 @@ export default function Login() {
             </p>
 
             <div className="mt-4 p-4 bg-muted/50 rounded-xl">
-              <p className="text-xs text-muted-foreground text-center">
-                <strong>Demo Access:</strong> Use username <code className="text-primary">demo</code> and password <code className="text-primary">demo123</code>
-              </p>
             </div>
           </div>
         </div>

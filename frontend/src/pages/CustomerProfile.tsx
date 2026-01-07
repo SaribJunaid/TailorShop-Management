@@ -211,41 +211,214 @@
 //   );
 // }
 // 
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react';
+// import { useParams, useNavigate } from 'react-router-dom';
+// import { Layout } from '@/components/Layout';
+// import apiClient from '@/api/client';
+// import { ArrowLeft, Phone, Mail, Plus, Loader2, Package, Calendar, Clock } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import { cn } from '@/lib/utils';
+
+// export default function CustomerProfile() {
+//   const { id } = useParams();
+//   const navigate = useNavigate();
+//   const [customer, setCustomer] = useState<any>(null);
+//   const [orders, setOrders] = useState<any[]>([]);
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         const [custRes, ordersRes] = await Promise.all([
+//           apiClient.get(`/customers/${id}`),
+//           apiClient.get(`/orders/?customer_id=${id}`)
+//         ]);
+//         setCustomer(custRes.data);
+//         setOrders(ordersRes.data);
+//       } catch (error) {
+//         console.error("Error fetching data", error);
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+//     fetchData();
+//   }, [id]);
+
+//   if (isLoading) return <Layout><div className="flex justify-center p-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div></Layout>;
+//   if (!customer) return <Layout><div className="p-10 text-center">Customer not found</div></Layout>;
+
+//   return (
+//     <Layout>
+//       <Button variant="ghost" onClick={() => navigate('/customers')} className="mb-6 gap-2">
+//         <ArrowLeft className="h-4 w-4" /> Back to Customers
+//       </Button>
+
+//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+//         <div className="lg:col-span-1">
+//           <div className="bg-card rounded-2xl shadow-luxury p-6 sticky top-6">
+//             <div className="flex flex-col items-center text-center mb-6">
+//               <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+//                 <span className="text-3xl font-semibold text-primary">{customer.name.charAt(0)}</span>
+//               </div>
+//               <h2 className="text-xl font-semibold">{customer.name}</h2>
+//               <p className="text-sm text-muted-foreground mt-1">Customer ID: #{customer.id}</p>
+//             </div>
+
+//             <div className="space-y-4">
+//               <div className="flex items-center gap-3">
+//                 <Phone className="h-5 w-5 text-muted-foreground" />
+//                 <div>
+//                   <p className="text-xs text-muted-foreground">Phone</p>
+//                   <p className="text-sm font-medium">{customer.phone}</p>
+//                 </div>
+//               </div>
+//               {customer.email && (
+//                 <div className="flex items-center gap-3">
+//                   <Mail className="h-5 w-5 text-muted-foreground" />
+//                   <div>
+//                     <p className="text-xs text-muted-foreground">Email</p>
+//                     <p className="text-sm font-medium">{customer.email}</p>
+//                   </div>
+//                 </div>
+//               )}
+//             </div>
+
+//             <Button 
+//               onClick={() => navigate('/orders/new', { state: { customerId: customer.id } })}
+//               className="w-full mt-6 h-11 rounded-xl gap-2"
+//             >
+//               <Plus className="h-4 w-4" /> New Order
+//             </Button>
+//           </div>
+//         </div>
+
+//         <div className="lg:col-span-2 space-y-6">
+//           <div className="bg-card rounded-2xl shadow-luxury p-6">
+//             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+//               <Package className="h-5 w-5 text-primary" />
+//               Order History ({orders.length})
+//             </h3>
+            
+//             <div className="space-y-4">
+//               {orders.length === 0 ? (
+//                 <div className="text-center py-10 border-2 border-dashed rounded-2xl">
+//                   <p className="text-muted-foreground">No orders found for this customer.</p>
+//                 </div>
+//               ) : (
+//                 orders.map((order) => (
+//                   <div 
+//                     key={order.id} 
+//                     onClick={() => navigate(`/orders/${order.id}`)}
+//                     className="p-4 border rounded-xl hover:border-primary/30 transition-all cursor-pointer bg-muted/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+//                   >
+//                     <div className="flex items-center gap-4">
+//                       <div className="h-10 w-10 rounded-lg bg-background border flex items-center justify-center font-bold text-xs">
+//                         ORD
+//                       </div>
+//                       <div>
+//                         <p className="font-bold text-sm">Order #{order.id}</p>
+//                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+//                           <Calendar className="h-3 w-3" /> {new Date(order.created_at).toLocaleDateString()}
+//                         </p>
+//                       </div>
+//                     </div>
+
+//                     <div className="flex items-center gap-6">
+//                       <div className="text-right">
+//                         <p className="text-xs text-muted-foreground font-medium">Total</p>
+//                         <p className="font-bold text-sm">Rs.{order.total_amount.toLocaleString()}</p>
+//                       </div>
+//                       <div className={cn(
+//                         "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border",
+//                         order.status === 'delivered' ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary border-primary/20"
+//                       )}>
+//                         {order.status}
+//                       </div>
+//                     </div>
+//                   </div>
+//                 ))
+//               )}
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </Layout>
+//   );
+// }
+
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import apiClient from '@/api/client';
-import { ArrowLeft, Phone, Mail, Plus, Loader2, Package, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, Plus, Loader2, Package, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+// --- DEFINED INTERFACES TO CLEAR ESLINT ERRORS ---
+export interface Customer {
+  id: number;
+  name: string;
+  phone: string;
+  email: string | null;
+}
+
+export interface Order {
+  id: number;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  customer_id: number;
+}
+
 export default function CustomerProfile() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [customer, setCustomer] = useState<any>(null);
-  const [orders, setOrders] = useState<any[]>([]);
+  
+  // Replaced 'any' with explicit types
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [custRes, ordersRes] = await Promise.all([
-          apiClient.get(`/customers/${id}`),
-          apiClient.get(`/orders/?customer_id=${id}`)
-        ]);
-        setCustomer(custRes.data);
-        setOrders(ordersRes.data);
-      } catch (error) {
-        console.error("Error fetching data", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
+  // Wrapped in useCallback to prevent "missing dependency" warnings in useEffect
+  const fetchData = useCallback(async () => {
+    if (!id) return;
+    
+    setIsLoading(true);
+    try {
+      const [custRes, ordersRes] = await Promise.all([
+        apiClient.get<Customer>(`/customers/${id}`),
+        apiClient.get<Order[]>(`/orders/?customer_id=${id}`)
+      ]);
+      setCustomer(custRes.data);
+      setOrders(ordersRes.data);
+    } catch (error) {
+      console.error("Error fetching data", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [id]);
 
-  if (isLoading) return <Layout><div className="flex justify-center p-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div></Layout>;
-  if (!customer) return <Layout><div className="p-10 text-center">Customer not found</div></Layout>;
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center p-20">
+          <Loader2 className="animate-spin h-10 w-10 text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <Layout>
+        <div className="p-10 text-center">Customer not found</div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -258,7 +431,9 @@ export default function CustomerProfile() {
           <div className="bg-card rounded-2xl shadow-luxury p-6 sticky top-6">
             <div className="flex flex-col items-center text-center mb-6">
               <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <span className="text-3xl font-semibold text-primary">{customer.name.charAt(0)}</span>
+                <span className="text-3xl font-semibold text-primary">
+                  {customer.name.charAt(0)}
+                </span>
               </div>
               <h2 className="text-xl font-semibold">{customer.name}</h2>
               <p className="text-sm text-muted-foreground mt-1">Customer ID: #{customer.id}</p>
@@ -318,7 +493,8 @@ export default function CustomerProfile() {
                       <div>
                         <p className="font-bold text-sm">Order #{order.id}</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                          <Calendar className="h-3 w-3" /> {new Date(order.created_at).toLocaleDateString()}
+                          <Calendar className="h-3 w-3" /> 
+                          {new Date(order.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -326,11 +502,15 @@ export default function CustomerProfile() {
                     <div className="flex items-center gap-6">
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground font-medium">Total</p>
-                        <p className="font-bold text-sm">Rs.{order.total_amount.toLocaleString()}</p>
+                        <p className="font-bold text-sm">
+                          Rs.{order.total_amount.toLocaleString()}
+                        </p>
                       </div>
                       <div className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border",
-                        order.status === 'delivered' ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary border-primary/20"
+                        order.status === 'delivered' 
+                          ? "bg-muted text-muted-foreground" 
+                          : "bg-primary/10 text-primary border-primary/20"
                       )}>
                         {order.status}
                       </div>

@@ -483,6 +483,319 @@
 //     </Layout>
 //   );
 // }
+// import { useEffect, useState, useCallback } from 'react';
+// import { Layout } from '@/components/Layout';
+// import apiClient from '@/api/client';
+// import { 
+//   UserCog, 
+//   ChevronRight, 
+//   Search, 
+//   Clock, 
+//   CheckCircle2, 
+//   AlertCircle,
+//   Loader2,
+//   UserCheck,
+//   TrendingUp,
+//   PackageCheck
+// } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import { Input } from '@/components/ui/input';
+// import { Badge } from '@/components/ui/badge';
+// import { useToast } from '@/hooks/use-toast';
+// import { cn } from '@/lib/utils';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// interface OrderItem {
+//   id: number;
+//   garment_type: string;
+//   status: string;
+//   order_id: number;
+//   stitcher_id: number | null;
+//   notes?: string;
+//   stitcher?: {
+//     name: string;
+//     specialty?: string;
+//   };
+// }
+
+// interface Stitcher {
+//   id: number;
+//   name: string;
+//   specialty: string;
+// }
+
+// export default function Assignment() {
+//   const { toast } = useToast();
+//   const [items, setItems] = useState<OrderItem[]>([]);
+//   const [stitchers, setStitchers] = useState<Stitcher[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [isUpdating, setIsUpdating] = useState<number | null>(null);
+
+//   // 1. Data Fetching
+//   const fetchData = useCallback(async () => {
+//     setLoading(true);
+//     try {
+//       const [itemsRes, stitchersRes] = await Promise.all([
+//         apiClient.get('/orders/items/'), 
+//         apiClient.get('/stitchers/')
+//       ]);
+//       setItems(itemsRes.data);
+//       setStitchers(stitchersRes.data);
+//     } catch (error) {
+//       toast({
+//         title: "Error",
+//         description: "Failed to load workshop data.",
+//         variant: "destructive"
+//       });
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, [toast]);
+
+//   useEffect(() => {
+//     fetchData();
+//   }, [fetchData]);
+
+//   // 2. Status Update (Individual Item)
+//   const handleUpdateStatus = async (itemId: number, newStatus: string, stitcherId?: number) => {
+//     setIsUpdating(itemId);
+//     try {
+//       const payload: any = { status: newStatus };
+//       if (stitcherId) payload.stitcher_id = stitcherId;
+
+//       // Backend logic in order.py will auto-sync the Main Order status here
+//       await apiClient.put(`/orders/items/${itemId}`, payload);
+      
+//       toast({
+//         title: `Status: ${newStatus.toUpperCase()}`,
+//         description: "Workshop updated and main order synced.",
+//       });
+
+//       setSelectedItemId(null);
+//       await fetchData(); // Refresh list to show new statuses/names
+//     } catch (error) {
+//       toast({
+//         title: "Update Failed",
+//         description: "Could not update the status.",
+//         variant: "destructive"
+//       });
+//     } finally {
+//       setIsUpdating(null);
+//     }
+//   };
+
+//   // 3. Main Order Update (Manual Override)
+//   const handleUpdateMainOrder = async (orderId: number, status: string) => {
+//     try {
+//       await apiClient.put(`/orders/${orderId}`, { status });
+//       toast({ title: "Order Updated", description: `Main Order #${orderId} is now ${status}.` });
+//       await fetchData();
+//     } catch (error) {
+//       toast({ title: "Error", description: "Failed to update main order status.", variant: "destructive" });
+//     }
+//   };
+
+//   // --- 4. Logic/Filtering (Defined BEFORE return to prevent ReferenceErrors) ---
+  
+//   const filteredItems = items.filter(item => 
+//     item.garment_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     item.id.toString().includes(searchTerm) ||
+//     item.order_id.toString().includes(searchTerm)
+//   );
+
+//   const pendingItems = filteredItems.filter(item => 
+//     (item.status === 'queued' || item.status === 'pending' || !item.stitcher_id) && 
+//     !['completed', 'ready', 'delivered'].includes(item.status)
+//   );
+
+//   const inProgressItems = filteredItems.filter(item => 
+//     ['in_progress', 'stitching', 'cutting'].includes(item.status)
+//   );
+
+//   const completedItems = filteredItems.filter(item => 
+//     ['completed', 'ready', 'delivered'].includes(item.status)
+//   );
+
+//   return (
+//     <Layout title="Workshop Management">
+//       <Tabs defaultValue="pending" className="w-full">
+//         <TabsList className="grid w-full grid-cols-3 mb-8 h-12 bg-muted/50 p-1 rounded-xl shadow-inner">
+//           <TabsTrigger value="pending" className="rounded-lg">Pending ({pendingItems.length})</TabsTrigger>
+//           <TabsTrigger value="progress" className="rounded-lg">In Progress ({inProgressItems.length})</TabsTrigger>
+//           <TabsTrigger value="completed" className="rounded-lg">Completed ({completedItems.length})</TabsTrigger>
+//         </TabsList>
+
+//         {/* --- PENDING TAB --- */}
+//         <TabsContent value="pending" className="grid grid-cols-1 lg:grid-cols-12 gap-8 focus-visible:outline-none">
+//           <div className="lg:col-span-7 space-y-4">
+//             <div className="flex items-center justify-between mb-2">
+//               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+//                 <AlertCircle className="h-4 w-4" /> Waitlist
+//               </h2>
+//               <div className="relative w-64">
+//                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//                 <Input 
+//                   placeholder="Search order or garment..." 
+//                   className="pl-9 h-9 rounded-xl text-xs bg-card border-border/50"
+//                   value={searchTerm}
+//                   onChange={(e) => setSearchTerm(e.target.value)}
+//                 />
+//               </div>
+//             </div>
+
+//             <div className="space-y-3">
+//               {loading ? (
+//                 <div className="flex justify-center py-10"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+//               ) : pendingItems.length > 0 ? (
+//                 pendingItems.map((item) => (
+//                   <div 
+//                     key={item.id}
+//                     onClick={() => setSelectedItemId(item.id)}
+//                     className={cn(
+//                       "p-4 rounded-2xl border-2 transition-all cursor-pointer shadow-sm hover:shadow-md",
+//                       selectedItemId === item.id ? "border-primary bg-primary/5 shadow-primary/10" : "border-border bg-card hover:border-primary/40"
+//                     )}
+//                   >
+//                     <div className="flex justify-between items-center">
+//                       <div className="flex gap-4 items-center">
+//                         <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
+//                           <Clock className="h-5 w-5 text-status-warning" />
+//                         </div>
+//                         <div>
+//                           <h3 className="font-bold">{item.garment_type}</h3>
+//                           <p className="text-xs text-muted-foreground">Order ID: #{item.order_id} • Item #{item.id}</p>
+//                         </div>
+//                       </div>
+//                       <ChevronRight className={cn("h-5 w-5 transition-transform", selectedItemId === item.id ? "text-primary rotate-90" : "text-muted-foreground")} />
+//                     </div>
+//                   </div>
+//                 ))
+//               ) : (
+//                 <div className="text-center py-16 bg-muted/20 rounded-3xl border-2 border-dashed border-muted/50">
+//                   <p className="text-muted-foreground">No pending items found.</p>
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+
+//           <div className="lg:col-span-5">
+//             <div className={cn(
+//               "sticky top-8 p-6 rounded-3xl border-2 transition-all duration-300",
+//               selectedItemId ? "border-primary bg-card shadow-luxury" : "border-dashed border-muted bg-muted/5 opacity-50"
+//             )}>
+//               <h3 className="font-bold mb-4 flex items-center gap-2">
+//                 <UserCheck className="h-5 w-5 text-primary" /> Assign Stitcher
+//               </h3>
+//               {!selectedItemId ? (
+//                 <p className="text-sm text-muted-foreground text-center py-10 italic">Select an item from the waitlist to assign a tailor.</p>
+//               ) : (
+//                 <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+//                   {stitchers.map((s) => (
+//                     <button
+//                       key={s.id}
+//                       disabled={isUpdating !== null}
+//                       onClick={() => handleUpdateStatus(selectedItemId, 'in_progress', s.id)}
+//                       className="w-full flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/5 hover:bg-primary/5 hover:border-primary transition-all group disabled:opacity-50"
+//                     >
+//                       <div className="text-left">
+//                         <p className="font-bold text-sm">{s.name}</p>
+//                         <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">{s.specialty}</p>
+//                       </div>
+//                       <Badge variant="secondary" className="group-hover:bg-primary group-hover:text-white transition-colors">Assign</Badge>
+//                     </button>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+//         </TabsContent>
+
+//         {/* --- IN PROGRESS TAB --- */}
+//         <TabsContent value="progress" className="focus-visible:outline-none space-y-4">
+//           {inProgressItems.length > 0 ? (
+//             inProgressItems.map(item => (
+//               <div key={item.id} className="p-5 border border-border/50 rounded-2xl bg-card flex justify-between items-center shadow-sm hover:shadow-md transition-all">
+//                 <div className="flex gap-4 items-center">
+//                   <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+//                     <TrendingUp className="h-6 w-6 text-blue-500" />
+//                   </div>
+//                   <div>
+//                     <h3 className="font-bold text-lg leading-tight">{item.garment_type}</h3>
+//                     <div className="flex items-center gap-2 mt-1">
+//                       <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 border-blue-100">
+//                         {item.status.replace('_', ' ')}
+//                       </Badge>
+//                       <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+//                         <UserCog className="h-3 w-3 text-primary" /> Tailor: <span className="text-primary font-bold">{item.stitcher?.name || "Assigned"}</span>
+//                       </p>
+//                     </div>
+//                     <p className="text-[10px] text-muted-foreground mt-1 font-mono">Order Reference: #{item.order_id}</p>
+//                   </div>
+//                 </div>
+//                 <div className="flex items-center gap-3">
+//                   <Button 
+//                     variant="outline" 
+//                     size="sm"
+//                     disabled={isUpdating === item.id}
+//                     className="text-green-600 border-green-200 hover:bg-green-50 gap-2 rounded-xl h-10 px-4"
+//                     onClick={() => handleUpdateStatus(item.id, 'completed')}
+//                   >
+//                     {isUpdating === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+//                     Mark Complete
+//                   </Button>
+//                 </div>
+//               </div>
+//             ))
+//           ) : (
+//             <div className="text-center py-20 bg-muted/10 rounded-3xl border-2 border-dashed italic text-muted-foreground">
+//               No garments are currently in production.
+//             </div>
+//           )}
+//         </TabsContent>
+
+//         {/* --- COMPLETED TAB --- */}
+//         <TabsContent value="completed" className="focus-visible:outline-none space-y-4">
+//           {completedItems.length > 0 ? (
+//             completedItems.map(item => (
+//               <div key={item.id} className="p-5 border border-border/50 rounded-2xl bg-muted/5 flex justify-between items-center transition-all">
+//                 <div className="flex gap-4 items-center">
+//                   <div className="h-12 w-12 rounded-2xl bg-green-50 flex items-center justify-center">
+//                     <CheckCircle2 className="h-6 w-6 text-green-500" />
+//                   </div>
+//                   <div>
+//                     <h3 className="font-bold text-lg">{item.garment_type}</h3>
+//                     <p className="text-xs text-muted-foreground">Successfully finished by {item.stitcher?.name || "Tailor"}</p>
+//                     <p className="text-[10px] font-mono text-muted-foreground">Order Reference: #{item.order_id}</p>
+//                   </div>
+//                 </div>
+//                 <div className="flex flex-col items-end gap-2">
+//                   <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 px-3 py-1 uppercase text-[10px] font-bold">
+//                     {item.status}
+//                   </Badge>
+//                   <Button 
+//                     variant="ghost" 
+//                     size="sm" 
+//                     className="text-[10px] h-7 gap-1 hover:text-primary transition-colors"
+//                     onClick={() => handleUpdateMainOrder(item.order_id, 'ready')}
+//                   >
+//                     <PackageCheck className="h-3 w-3" /> Mark Entire Order Ready
+//                   </Button>
+//                 </div>
+//               </div>
+//             ))
+//           ) : (
+//             <div className="text-center py-20 bg-muted/10 rounded-3xl border-2 border-dashed italic text-muted-foreground">
+//               No completed items yet. Finished garments will appear here.
+//             </div>
+//           )}
+//         </TabsContent>
+//       </Tabs>
+//     </Layout>
+//   );
+// }
+
 import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '@/components/Layout';
 import apiClient from '@/api/client';
@@ -505,6 +818,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// --- INTERFACES ---
 interface OrderItem {
   id: number;
   garment_type: string;
@@ -524,6 +838,12 @@ interface Stitcher {
   specialty: string;
 }
 
+// Fixed "Unexpected any" by defining a payload interface
+interface UpdatePayload {
+  status: string;
+  stitcher_id?: number;
+}
+
 export default function Assignment() {
   const { toast } = useToast();
   const [items, setItems] = useState<OrderItem[]>([]);
@@ -538,12 +858,13 @@ export default function Assignment() {
     setLoading(true);
     try {
       const [itemsRes, stitchersRes] = await Promise.all([
-        apiClient.get('/orders/items/'), 
-        apiClient.get('/stitchers/')
+        apiClient.get<OrderItem[]>('/orders/items/'), 
+        apiClient.get<Stitcher[]>('/stitchers/')
       ]);
       setItems(itemsRes.data);
       setStitchers(stitchersRes.data);
     } catch (error) {
+      console.error("Fetch Error:", error);
       toast({
         title: "Error",
         description: "Failed to load workshop data.",
@@ -552,7 +873,7 @@ export default function Assignment() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast]); // Dependency added to fix exhaustive-deps
 
   useEffect(() => {
     fetchData();
@@ -562,10 +883,10 @@ export default function Assignment() {
   const handleUpdateStatus = async (itemId: number, newStatus: string, stitcherId?: number) => {
     setIsUpdating(itemId);
     try {
-      const payload: any = { status: newStatus };
+      // Replaced 'any' with UpdatePayload interface
+      const payload: UpdatePayload = { status: newStatus };
       if (stitcherId) payload.stitcher_id = stitcherId;
 
-      // Backend logic in order.py will auto-sync the Main Order status here
       await apiClient.put(`/orders/items/${itemId}`, payload);
       
       toast({
@@ -574,8 +895,9 @@ export default function Assignment() {
       });
 
       setSelectedItemId(null);
-      await fetchData(); // Refresh list to show new statuses/names
+      await fetchData(); 
     } catch (error) {
+      console.error("Update Error:", error);
       toast({
         title: "Update Failed",
         description: "Could not update the status.",
@@ -587,18 +909,18 @@ export default function Assignment() {
   };
 
   // 3. Main Order Update (Manual Override)
-  const handleUpdateMainOrder = async (orderId: number, status: string) => {
+  const handleUpdateMainOrder = useCallback(async (orderId: number, status: string) => {
     try {
       await apiClient.put(`/orders/${orderId}`, { status });
       toast({ title: "Order Updated", description: `Main Order #${orderId} is now ${status}.` });
       await fetchData();
     } catch (error) {
+      console.error("Main Order Update Error:", error);
       toast({ title: "Error", description: "Failed to update main order status.", variant: "destructive" });
     }
-  };
+  }, [fetchData, toast]);
 
-  // --- 4. Logic/Filtering (Defined BEFORE return to prevent ReferenceErrors) ---
-  
+  // --- 4. Logic/Filtering ---
   const filteredItems = items.filter(item => 
     item.garment_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.id.toString().includes(searchTerm) ||
@@ -627,7 +949,6 @@ export default function Assignment() {
           <TabsTrigger value="completed" className="rounded-lg">Completed ({completedItems.length})</TabsTrigger>
         </TabsList>
 
-        {/* --- PENDING TAB --- */}
         <TabsContent value="pending" className="grid grid-cols-1 lg:grid-cols-12 gap-8 focus-visible:outline-none">
           <div className="lg:col-span-7 space-y-4">
             <div className="flex items-center justify-between mb-2">
@@ -712,7 +1033,6 @@ export default function Assignment() {
           </div>
         </TabsContent>
 
-        {/* --- IN PROGRESS TAB --- */}
         <TabsContent value="progress" className="focus-visible:outline-none space-y-4">
           {inProgressItems.length > 0 ? (
             inProgressItems.map(item => (
@@ -755,7 +1075,6 @@ export default function Assignment() {
           )}
         </TabsContent>
 
-        {/* --- COMPLETED TAB --- */}
         <TabsContent value="completed" className="focus-visible:outline-none space-y-4">
           {completedItems.length > 0 ? (
             completedItems.map(item => (

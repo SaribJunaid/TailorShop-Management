@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from app.routers import auth, customers, stitchers, measurements, orders,dashboard
+from app.routers import auth, customers, stitchers, measurements, orders,dashboard,shops, users
 # Load environment variables
 load_dotenv()
 
@@ -41,3 +41,5 @@ app.include_router(stitchers.router)
 app.include_router(measurements.router)
 app.include_router(orders.router)
 app.include_router(dashboard.router)
+app.include_router(shops.router)
+app.include_router(users.router)

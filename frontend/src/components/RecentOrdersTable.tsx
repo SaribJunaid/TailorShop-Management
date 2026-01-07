@@ -236,7 +236,7 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
             <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Order ID</th>
             <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Customer</th>
             <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</th>
-            <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Balance Due</th>
+            <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Due</th>
             <th className="px-6 py-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider">Action</th>
           </tr>
         </thead>
