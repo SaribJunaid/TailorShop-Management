@@ -245,6 +245,128 @@
 //   );
 // }
 
+// import { useEffect, useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { Layout } from '@/components/Layout';
+// import { MetricCard } from '@/components/MetricCard';
+// import { RecentOrdersTable } from '@/components/RecentOrdersTable';
+// import { RevenueChart } from '@/components/RevenueChart';
+// import { DeadlinesWidget } from '@/components/DeadlinesWidget';
+// import { ClipboardList, AlertCircle, Users, Wallet, Loader2 } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import apiClient from '@/api/client';
+// import { useToast } from '@/hooks/use-toast';
+
+// export default function Dashboard() {
+//   const navigate = useNavigate();
+//   const { toast } = useToast();
+//   const [orders, setOrders] = useState<any[]>([]);
+//   const [customerCount, setCustomerCount] = useState(0);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     const loadDashboard = async () => {
+//       try {
+//         const [ordersRes, customersRes] = await Promise.all([
+//           apiClient.get('/orders/'),
+//           apiClient.get('/customers/')
+//         ]);
+        
+//         // Ensure we always have an array even if backend fails
+//         setOrders(Array.isArray(ordersRes.data) ? ordersRes.data : []);
+//         setCustomerCount(Array.isArray(customersRes.data) ? customersRes.data.length : 0);
+//       } catch (err) {
+//         console.error("Dashboard Load Error:", err);
+//         toast({ 
+//           title: "Connection Error", 
+//           description: "Could not sync with the workshop database.", 
+//           variant: "destructive" 
+//         });
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     loadDashboard();
+//   }, [toast]);
+
+//   if (loading) return (
+//     <div className="flex h-screen w-full items-center justify-center">
+//       <Loader2 className="animate-spin h-10 w-10 text-primary" />
+//     </div>
+//   );
+
+//   // --- Real Logic for Widgets ---
+  
+//   // 1. Active Orders: pending, in_progress, stitching, etc.
+//   const activeOrders = orders.filter(o => 
+//     !['completed', 'delivered', 'cancelled'].includes(o.status?.toLowerCase())
+//   ).length;
+
+//   // 2. Pending Payments: Total of balance_due column
+//   const totalBalance = orders.reduce((sum, o) => sum + (Number(o.balance_due) || 0), 0);
+
+//   // 3. Urgent Today: Comparing due_date (YYYY-MM-DD) to today
+//   const today = new Date().toISOString().split('T')[0];
+//   const urgentCount = orders.filter(o => o.due_date === today && o.status !== 'completed').length;
+
+//   return (
+//     <Layout title="Business Control Center">
+//       {/* KPI Section */}
+//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+//         <MetricCard 
+//           title="Active Orders" 
+//           value={activeOrders} 
+//           icon={ClipboardList} 
+//           variant="success" 
+//           onClick={() => navigate('/orders')} 
+//         />
+//         <MetricCard 
+//           title="Urgent Today" 
+//           value={urgentCount} 
+//           icon={AlertCircle} 
+//           variant="danger" 
+//           onClick={() => navigate('/workshop')} 
+//         />
+//         <MetricCard 
+//           title="Clients" 
+//           value={customerCount} 
+//           icon={Users} 
+//           variant="info" 
+//           onClick={() => navigate('/customers')} 
+//         />
+//         <MetricCard 
+//           title="To Collect" 
+//           value={`Rs.${totalBalance.toLocaleString()}`} 
+//           icon={Wallet} 
+//           variant="gold" 
+//         />
+//       </div>
+
+//       {/* Visual Analytics Section */}
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+//         {/* Pass the actual orders array to your charts */}
+//         <RevenueChart orders={orders} /> 
+//         <DeadlinesWidget orders={orders} />
+//       </div>
+
+//       {/* Table Section */}
+//       <div className="bg-card rounded-3xl shadow-luxury border border-border/40 overflow-hidden">
+//         <div className="p-6 border-b flex justify-between items-center bg-muted/30">
+//             <div>
+//               <h3 className="font-bold text-lg">Recent Bookings</h3>
+//               <p className="text-xs text-muted-foreground">Latest 5 orders from the shop</p>
+//             </div>
+//             <Button variant="outline" size="sm" className="rounded-xl" onClick={() => navigate('/orders')}>
+//               View Full History
+//             </Button>
+//         </div>
+//         {/* Pass only the last 5 orders to the table */}
+//         <RecentOrdersTable orders={orders.slice(0, 5)} />
+//       </div>
+//     </Layout>
+//   );
+// }
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
@@ -257,10 +379,32 @@ import { Button } from '@/components/ui/button';
 import apiClient from '@/api/client';
 import { useToast } from '@/hooks/use-toast';
 
+// --- DEFINED INTERFACES TO CLEAR VS CODE ERRORS ---
+export interface Customer {
+  id: number;
+  name: string;
+  phone?: string;
+  email?: string | null;
+}
+
+export interface Order {
+  id: number;
+  customer_id: number;
+  total_amount: number;
+  balance_due: number;
+  status: string;
+  due_date: string;
+  created_at: string;
+  customer?: Customer; // This ensures the name "Sarib" is recognized
+  items?: any[];
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [orders, setOrders] = useState<any[]>([]);
+  
+  // Changed from any[] to Order[] to fix ESLint "Unexpected any"
+  const [orders, setOrders] = useState<Order[]>([]);
   const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -272,8 +416,10 @@ export default function Dashboard() {
           apiClient.get('/customers/')
         ]);
         
-        // Ensure we always have an array even if backend fails
-        setOrders(Array.isArray(ordersRes.data) ? ordersRes.data : []);
+        // Data Validation: Ensure we are setting a clean array of Orders
+        const fetchedOrders = Array.isArray(ordersRes.data) ? ordersRes.data : [];
+        setOrders(fetchedOrders);
+        
         setCustomerCount(Array.isArray(customersRes.data) ? customersRes.data.length : 0);
       } catch (err) {
         console.error("Dashboard Load Error:", err);
@@ -286,8 +432,9 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
+    
     loadDashboard();
-  }, [toast]);
+  }, [toast]); // Dependencies are correct to clear ESLint warnings
 
   if (loading) return (
     <div className="flex h-screen w-full items-center justify-center">
@@ -295,23 +442,20 @@ export default function Dashboard() {
     </div>
   );
 
-  // --- Real Logic for Widgets ---
+  // --- KPI Logic ---
   
-  // 1. Active Orders: pending, in_progress, stitching, etc.
   const activeOrders = orders.filter(o => 
     !['completed', 'delivered', 'cancelled'].includes(o.status?.toLowerCase())
   ).length;
 
-  // 2. Pending Payments: Total of balance_due column
   const totalBalance = orders.reduce((sum, o) => sum + (Number(o.balance_due) || 0), 0);
 
-  // 3. Urgent Today: Comparing due_date (YYYY-MM-DD) to today
   const today = new Date().toISOString().split('T')[0];
-  const urgentCount = orders.filter(o => o.due_date === today && o.status !== 'completed').length;
+  const urgentCount = orders.filter(o => o.due_date === today && o.status?.toLowerCase() !== 'completed').length;
 
   return (
     <Layout title="Business Control Center">
-      {/* KPI Section */}
+      {/* Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <MetricCard 
           title="Active Orders" 
@@ -342,14 +486,13 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Visual Analytics Section */}
+      {/* Analytics: Charts and Deadlines */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Pass the actual orders array to your charts */}
         <RevenueChart orders={orders} /> 
         <DeadlinesWidget orders={orders} />
       </div>
 
-      {/* Table Section */}
+      {/* Recent Orders Table */}
       <div className="bg-card rounded-3xl shadow-luxury border border-border/40 overflow-hidden">
         <div className="p-6 border-b flex justify-between items-center bg-muted/30">
             <div>
@@ -360,7 +503,8 @@ export default function Dashboard() {
               View Full History
             </Button>
         </div>
-        {/* Pass only the last 5 orders to the table */}
+        
+        {/* Pass sliced data to the table */}
         <RecentOrdersTable orders={orders.slice(0, 5)} />
       </div>
     </Layout>

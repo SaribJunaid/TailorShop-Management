@@ -260,6 +260,30 @@ def create_full_order(
     return new_order
 
 
+# @router.get("/", response_model=List[OrderRead])
+# def list_orders(
+#     status: Optional[str] = None,
+#     customer_id: Optional[int] = None,
+#     priority: Optional[str] = None,
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(get_current_user)
+# ):
+#     # Use .joinedload to prevent the 500 Internal Server Error
+#     from sqlalchemy.orm import joinedload
+    
+#     query = db.query(Order).options(
+#         joinedload(Order.items), 
+#         joinedload(Order.customer)
+#     ).filter(Order.shop_id == current_user.shop_id)
+    
+#     if status:
+#         query = query.filter(Order.status == status)
+#     if customer_id:
+#         query = query.filter(Order.customer_id == customer_id)
+#     if priority:
+#         query = query.filter(Order.priority == priority)
+        
+#     return query.order_by(Order.due_date.asc()).all()
 @router.get("/", response_model=List[OrderRead])
 def list_orders(
     status: Optional[str] = None,
@@ -268,12 +292,12 @@ def list_orders(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Use .joinedload to prevent the 500 Internal Server Error
     from sqlalchemy.orm import joinedload
     
+    # We query Order and pull in the full customer and items objects
     query = db.query(Order).options(
         joinedload(Order.items), 
-        joinedload(Order.customer)
+        joinedload(Order.customer) 
     ).filter(Order.shop_id == current_user.shop_id)
     
     if status:
