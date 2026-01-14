@@ -24,6 +24,7 @@
 # class TokenData(BaseModel):
 #     username: Optional[str] = None
 
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
@@ -49,6 +50,11 @@ class UserRead(BaseModel):
     name: str
     phone: str
     shop_id: int
+    is_active: bool
+    is_admin: bool
+    # Changed to datetime for accurate frontend logic
+    created_at: datetime 
+    subscription_expires_at: Optional[datetime] = None 
 
     model_config = ConfigDict(from_attributes=True)
 

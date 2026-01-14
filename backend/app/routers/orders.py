@@ -200,7 +200,7 @@ from app.models.order_item import OrderItem
 from app.models.user import User
 from app.models.shop import Shop
 from app.schemas.order import OrderCreate, OrderRead, OrderItemRead
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user , active_subscription_required
 from app.schemas.order_item import OrderItemUpdate # Import the new schema
 from app.schemas.order import OrderUpdate
 
@@ -217,7 +217,7 @@ class ItemUpdate(BaseModel):
 def create_full_order(
     order_in: OrderCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(active_subscription_required)
 ):
     """
     Requirement: Create a master order and all garments in one go.
@@ -290,7 +290,7 @@ def list_orders(
     customer_id: Optional[int] = None,
     priority: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(active_subscription_required)
 ):
     from sqlalchemy.orm import joinedload
     
@@ -313,7 +313,7 @@ def list_orders(
 @router.get("/items/", response_model=List[OrderItemRead])
 def list_order_items(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(active_subscription_required)
 ):
     """
     Requirement #8: Fetches ALL items for the workshop page.

@@ -41,3 +41,33 @@ def get_current_user(
         raise HTTPException(status_code=400, detail="Inactive user")
         
     return user
+
+from datetime import datetime, timedelta
+
+# ... (Keep your existing get_current_user code)
+
+def active_subscription_required(current_user: User = Depends(get_current_user)):
+    """
+    Enforces the 7-day trial and manual subscription logic.
+    Admins bypass this check.
+    """
+    if current_user.is_admin:
+        return current_user
+
+    # 1. Trial Check (7 days from created_at)
+    trial_period = current_user.created_at + timedelta(days=7)
+    is_within_trial = datetime.now() <= trial_period
+
+    # 2. Manual Subscription Check
+    is_subscribed = (
+        current_user.subscription_expires_at is not None and 
+        current_user.subscription_expires_at >= datetime.now()
+    )
+
+    if not (is_within_trial or is_subscribed):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Your trial or subscription has expired. Please contact admin for activation."
+        )
+
+    return current_user

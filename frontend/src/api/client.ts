@@ -76,6 +76,19 @@ apiClient.interceptors.request.use(
 //   }
 //   return config;
 // });
+// apiClient.interceptors.response.use(
+//   (response) => response,
+//   (error: AxiosError) => {
+//     if (error.response?.status === 401) {
+//       localStorage.removeItem('token');
+//       localStorage.removeItem('user');
+//       window.location.href = '/login';
+//     }
+//     return Promise.reject(error);
+//   }
+// );
+// Add this to your existing apiClient.interceptors.response.use in client.ts
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
@@ -83,6 +96,11 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+    } 
+    // ADD THIS BLOCK:
+    else if (error.response?.status === 402 || error.response?.status === 403) {
+      // If the backend says "Payment Required" or "Forbidden", send to lock screen
+      window.location.href = '/payment-required';
     }
     return Promise.reject(error);
   }

@@ -192,6 +192,10 @@ interface User {
   username: string;
   name?: string;
   shop_id?: number;
+  is_admin?: boolean;
+  is_active?: boolean;
+  subscription_expires_at?: string; // ISO date string
+  created_at?: string; // ISO date string
 }
 
 interface LoginResponse {
@@ -244,24 +248,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   }, [logout]);
 
-  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const formData = new URLSearchParams();
-      formData.append('username', username);
-      formData.append('password', password);
+  // const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  //   try {
+  //     const formData = new URLSearchParams();
+  //     formData.append('username', username);
+  //     formData.append('password', password);
 
-      // Specify the response type <LoginResponse> to avoid 'any'
-      const response = await authClient.post<LoginResponse>('/auth/login', formData);
-      const { access_token } = response.data;
+  //     // Specify the response type <LoginResponse> to avoid 'any'
+  //     const response = await authClient.post<LoginResponse>('/auth/login', formData);
+  //     const { access_token } = response.data;
       
-      localStorage.setItem('token', access_token);
+  //     localStorage.setItem('token', access_token);
       
-      const userData: User = { username };
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+  //     const userData: User = { username };
+  //     localStorage.setItem('user', JSON.stringify(userData));
+  //     setUser(userData);
       
-      return { success: true };
-    } catch (error: unknown) {
+  //     return { success: true };
+  //   } 
+  // Inside AuthContext.tsx, update the Login function:
+const login = async (username: string, password: string) => {
+  try {
+    const formData = new URLSearchParams();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    const response = await authClient.post('/auth/login', formData);
+    
+    // Ensure we capture created_at from backend to handle trial logic
+    const { access_token, is_admin, is_active, subscription_expires_at, created_at } = response.data;
+    
+    localStorage.setItem('token', access_token);
+    
+    const userData: User = { 
+      username, 
+      is_admin, 
+      is_active, 
+      subscription_expires_at,
+      created_at // Add this to your User interface above
+    };
+    
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    return { success: true };
+  }  catch (error: unknown) {
       // Fixed "Unexpected any" by casting error as AxiosError with ApiError interface
       const err = error as AxiosError<ApiError>;
       return { 
@@ -270,6 +300,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
     }
   };
+   
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>

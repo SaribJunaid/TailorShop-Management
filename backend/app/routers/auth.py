@@ -42,26 +42,47 @@ def register_shop_owner(user_in: UserCreate, db: Session = Depends(get_db)):
     
     return new_user
 
-@router.post("/login", response_model=Token)
+# @router.post("/login", response_model=Token)
+# def login_for_access_token(
+#     form_data: OAuth2PasswordRequestForm = Depends(), 
+#     db: Session = Depends(get_db)
+# ):
+#     """
+#     Standard OAuth2 compatible token login.
+#     """
+#     user = db.query(User).filter(User.username == form_data.username).first()
+    
+#     if not user or not verify_password(form_data.password, user.password_hash):
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Incorrect username or password",
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
+
+#     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+#     access_token = create_access_token(
+#         data={"sub": user.username}, expires_delta=access_token_expires
+#     )
+    
+#     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/login") # Remove response_model=Token temporarily to allow custom data
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), 
     db: Session = Depends(get_db)
 ):
-    """
-    Standard OAuth2 compatible token login.
-    """
     user = db.query(User).filter(User.username == form_data.username).first()
     
     if not user or not verify_password(form_data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
+    access_token = create_access_token(data={"sub": user.username})
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Return everything the Frontend needs to decide access
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "is_admin": user.is_admin,
+        "is_active": user.is_active,
+        "subscription_expires_at": user.subscription_expires_at.isoformat() if user.subscription_expires_at else None
+    }
